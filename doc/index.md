@@ -1,6 +1,6 @@
 # com.telerik.sendgrid
 
-The plugin allows you to quickly and easily send email through SendGrid javascript.
+The plugin allows you to quickly and easily send email through SendGrid using javascript.
 
 The plugin defines a global `sendgrid` object, which defines the method necessary for sending email via SendGrid web api.
 
