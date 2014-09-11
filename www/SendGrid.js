@@ -5,7 +5,7 @@ function SendGrid(){
 	var me = this;
 }
 
-SendGrid.prototype.sendWithWeb = function(email, successCallback, errorCallback){
+SendGrid.prototype.send = function(email, successCallback, errorCallback){
     exec(successCallback, errorCallback, "SendGrid", "sendWithWeb", [email]);
 }
 

@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <plugin id="com.telerik.sendgrid" version="1.0.0" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
-  
+
   <name>SendGrid</name>
 
   <preference name="API_USER" />
@@ -30,4 +30,25 @@
     </config-file>
 
   </platform>
+
+  	<platform name="android">
+
+		<source-file src="src/android/res/values/sendgrid.xml" target-dir="res/values" />
+
+        <config-file target="res/values/sendgrid.xml" parent="/*">
+            <string name="api_user">$API_USER</string>
+            <string name="api_key">$API_KEY</string>
+        </config-file>
+
+		<config-file target="res/xml/config.xml" parent="/*">
+			<feature name="SendGrid">
+           		<param name="android-package" value="com.telerik.sendgrid.SendGridPlugin"/>
+         	</feature>
+     	</config-file>
+
+     	<source-file src="src/android/SendGridPlugin.java"  target-dir="src/com/telerik/sendgrid" />
+
+	</platform>
+
+
 </plugin>

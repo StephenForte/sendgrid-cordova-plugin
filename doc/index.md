@@ -49,6 +49,7 @@ Send it and additionally handle the callbacks for details:
 ## Supported Platforms
 
 - iOS
+- Android
 
 ## Resources
 
