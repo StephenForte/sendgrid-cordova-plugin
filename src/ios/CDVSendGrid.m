@@ -15,16 +15,13 @@ NSString * const sgEndpoint = @"api/mail.send.json";
     NSDictionary* email = [command.arguments objectAtIndex:0];
 
     if (email != nil) {
-
-        NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:email];
-
         NSString *apiUser = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"ApiUser"];
-
-        [parameters setObject:apiUser forKey:@"api_user"];
-
         NSString *apiKey = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"ApiKey"];
 
-        [parameters setObject:apiKey forKey:@"api_key"];
+
+        NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{@"api_user": apiUser, @"api_key": apiKey}];
+
+        [parameters addEntriesFromDictionary:email];
 
 
         if ([email objectForKey:@"bcc"])
@@ -40,7 +37,7 @@ NSString * const sgEndpoint = @"api/mail.send.json";
             [parameters setObject:[email objectForKey:@"replyto"] forKey:@"replyto"];
 
 
-        [self sendAsynchronousRequest:URL block:^(NSDictionary *result, NSError *error) {
+        [self sendAsynchronousRequest:URL data:parameters block:^(NSDictionary *result, NSError *error) {
             if (!error){
                 if ([[result objectForKey:@"message"] isEqualToString:@"success"])
                     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
@@ -58,11 +55,31 @@ NSString * const sgEndpoint = @"api/mail.send.json";
 }
 
 
-- (void)sendAsynchronousRequest:(NSURL*)url block:(void (^)(NSDictionary * result, NSError *error))block
+- (void)sendAsynchronousRequest:(NSURL*)url data:(NSDictionary*)data block:(void (^)(NSDictionary * result, NSError *error))block
 {
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
 
-    [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+    [request setHTTPMethod:@"POST"];
+
+    NSString *keyValueString = @"";
+    NSError *error = nil;
+
+
+    for (NSString *key in data.allKeys){
+        NSString *fragment = [NSString stringWithFormat:@"%@=%@", key, [data objectForKey:key]];
+        keyValueString = [keyValueString stringByAppendingString:fragment];
+        keyValueString = [keyValueString stringByAppendingString:@"&amp;"];
+    }
+
+
+    NSData *body = [keyValueString dataUsingEncoding:NSUTF8StringEncoding];
+
+
+    [request setHTTPBody:body];
+
+    if (!error){
+        NSLog(@"%@", error);
+    }
 
     NSURLSessionConfiguration *config = [NSURLSessionConfiguration defaultSessionConfiguration];
     NSURLSession *session = [NSURLSession sessionWithConfiguration:config];
@@ -70,7 +87,7 @@ NSString * const sgEndpoint = @"api/mail.send.json";
     NSURLSessionDataTask *task = [session dataTaskWithRequest:request completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
 
         NSError *jsonParsingError = nil;
-        
+
         NSDictionary *result = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments  error:&jsonParsingError];
 
         if (jsonParsingError)

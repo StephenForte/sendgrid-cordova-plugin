@@ -1,8 +1,6 @@
 #import <Cordova/CDV.h>
 
-@interface CDVSendGrid : CDVPlugin {
-  // Member variables go here.
-}
+@interface CDVSendGrid : CDVPlugin
 
 - (void)sendWithWeb:(CDVInvokedUrlCommand*)command;
 

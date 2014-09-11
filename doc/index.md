@@ -29,12 +29,12 @@ If you are using telerik AppBuilder then checkout the [plugins.telerik.com](http
 Create a new SendGrid email object, and customize the paratmers of your message.
 
     var email = {
-      to = 'steve.forte@telerik.com',
-      from = 'admin@telerik.com',
-      subject = 'Checkout this Awesome Plugin',
-      html = '<h1> My first emial through SendGrid </h1>',
-      text = 'My first email through SendGrid'
-    }
+      "to" : "mehfuz@gmail.com",
+      "from" : "admin@telerik.com",
+      "subject" : "Checkout this Awesome Plugin",
+      "html" : "<h1> My first emial through SendGrid </h1>",
+      "text" : "My first email through SendGrid"
+    };
 
 
 Send it and additionally handle the callbacks for details:

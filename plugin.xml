@@ -1,16 +1,17 @@
 <?xml version='1.0' encoding='utf-8'?>
 <plugin id="com.telerik.sendgrid" version="1.0.0" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+  
   <name>SendGrid</name>
 
   <preference name="API_USER" />
   <preference name="API_KEY" />
 
-  <js-module name="SendGrid" src="www/SendGrid.js">
+  <js-module name="sendgrid" src="www/sendgrid.js">
     <clobbers target="sendgrid" />
   </js-module>
 
   <platform name="ios">
-    
+
     <config-file parent="/*" target="config.xml">
       <feature name="SendGrid">
         <param name="ios-package" value="CDVSendGrid" />
