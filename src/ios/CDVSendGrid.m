@@ -66,14 +66,16 @@ NSString * const sgEndpoint = @"api/mail.send.json";
 
 
     for (NSString *key in data.allKeys){
-        NSString *fragment = [NSString stringWithFormat:@"%@=%@", key, [data objectForKey:key]];
+
+        NSString *value = [data objectForKey:key];
+
+        NSString *fragment = [NSString stringWithFormat:@"%@=%@", key, [self urlencode:value]];
+
         keyValueString = [keyValueString stringByAppendingString:fragment];
         keyValueString = [keyValueString stringByAppendingString:@"&amp;"];
     }
 
-
     NSData *body = [keyValueString dataUsingEncoding:NSUTF8StringEncoding];
-
 
     [request setHTTPBody:body];
 
@@ -100,5 +102,27 @@ NSString * const sgEndpoint = @"api/mail.send.json";
     [task resume];
 
 }
+
+- (NSString *)urlencode: (NSString*)string
+{
+    NSMutableString *output = [NSMutableString string];
+    const unsigned char *source = (const unsigned char *)[string UTF8String];
+    int sourceLen = strlen((const char *)source);
+    for (int i = 0; i < sourceLen; ++i) {
+        const unsigned char thisChar = source[i];
+        if (thisChar == ' '){
+            [output appendString:@"+"];
+        } else if (thisChar == '.' || thisChar == '-' || thisChar == '_' || thisChar == '~' ||
+                   (thisChar >= 'a' && thisChar <= 'z') ||
+                   (thisChar >= 'A' && thisChar <= 'Z') ||
+                   (thisChar >= '0' && thisChar <= '9')) {
+            [output appendFormat:@"%c", thisChar];
+        } else {
+            [output appendFormat:@"%%%02X", thisChar];
+        }
+    }
+    return output;
+}
+
 
 @end
