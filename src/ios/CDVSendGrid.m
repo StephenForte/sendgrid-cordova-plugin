@@ -1,7 +1,9 @@
 #import "CDVSendGrid.h"
 
-NSString * const sgDomain = @"https://sendgrid.com/";
-NSString * const sgEndpoint = @"api/mail.send.json";
+
+#import "SendGridEmail.h"
+#import "SendGrid.h"
+
 
 @implementation CDVSendGrid
 
@@ -9,120 +11,63 @@ NSString * const sgEndpoint = @"api/mail.send.json";
 {
     __block CDVPluginResult* pluginResult = nil;
 
-    //Uses Web Api to send email
-    NSURL *URL = [NSURL URLWithString:[NSString stringWithFormat: @"%@%@",sgDomain, sgEndpoint]];
+    NSDictionary* body = [command.arguments objectAtIndex:0];
 
-    NSDictionary* email = [command.arguments objectAtIndex:0];
-
-    if (email != nil) {
+    if (body != nil) {
         NSString *apiUser = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"ApiUser"];
         NSString *apiKey = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"ApiKey"];
 
+        SendGrid *sendGrid = [SendGrid apiUser:apiUser apiKey:apiKey];
 
-        NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{@"api_user": apiUser, @"api_key": apiKey}];
+        SendGridEmail *sendGridEmail = [[SendGridEmail alloc] init];
 
-        [parameters addEntriesFromDictionary:email];
+        if ([body objectForKey:@"to"])
+            [sendGridEmail setTo:[body objectForKey:@"to"]];
+        if ([body objectForKey:@"from"])
+            [sendGridEmail setFrom:[body objectForKey:@"from"]];
+        if ([body objectForKey:@"subject"])
+            [sendGridEmail setSubject:[body objectForKey:@"subject"]];
+        if ([body objectForKey:@"text"])
+            [sendGridEmail setText:[body objectForKey:@"text"]];
+        if ([body objectForKey:@"html"])
+            [sendGridEmail setHtml:[body objectForKey:@"html"]];
+        if ([body objectForKey:@"toname"])
+            [sendGridEmail setToName:[body objectForKey:@"toname"]];
+        if ([body objectForKey:@"fromname"])
+            [sendGridEmail setFromName:[body objectForKey:@"fromname"]];
+        if ([body objectForKey:@"replyto"])
+            [sendGridEmail setReplyTo:[body objectForKey:@"replyto"]];
+        if ([body objectForKey:@"bcc"]
+            && [[body objectForKey:@"bcc"] isKindOfClass:[NSArray class]])
+            [sendGridEmail setBcc:[body objectForKey:@"bcc"]];
 
+        if ([body objectForKey:@"imagepath"]){
 
-        if ([email objectForKey:@"bcc"])
-            [parameters setObject:[email objectForKey:@"bcc"] forKey:@"bcc"];
+            // normalize
+            NSString *fullPath = [[body objectForKey:@"imagepath"] stringByReplacingOccurrencesOfString:@"file://" withString:@""];
 
-        if ([email objectForKey:@"toname"])
-            [parameters setObject:[email objectForKey:@"toname"] forKey:@"toname"];
+            UIImage *image = [UIImage imageWithContentsOfFile:fullPath];
+            [sendGridEmail attachImage:image];
+        }
 
-        if ([email objectForKey:@"fromname"])
-            [parameters setObject:[email objectForKey:@"fromname"] forKey:@"fromname"];
+        [sendGrid sendWithWeb:sendGridEmail successBlock:^(id result) {
+            if ([[result objectForKey:@"message"] isEqualToString:@"success"])
+                pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
+            else
+                pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:result];
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+            });
 
-        if ([email objectForKey:@"replyto"])
-            [parameters setObject:[email objectForKey:@"replyto"] forKey:@"replyto"];
+        } failureBlock:^(NSError *error) {
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:error.localizedDescription];
 
-
-        [self sendAsynchronousRequest:URL data:parameters block:^(NSDictionary *result, NSError *error) {
-            if (!error){
-                if ([[result objectForKey:@"message"] isEqualToString:@"success"])
-                    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
-                else
-                    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:result];
-            }
-            else{
-                pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageToErrorObject:error.code];
-            }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
             });
         }];
     }
 }
-
-
-- (void)sendAsynchronousRequest:(NSURL*)url data:(NSDictionary*)data block:(void (^)(NSDictionary * result, NSError *error))block
-{
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
-
-    [request setHTTPMethod:@"POST"];
-
-    NSString *keyValueString = @"";
-    NSError *error = nil;
-
-
-    for (NSString *key in data.allKeys){
-
-        NSString *value = [data objectForKey:key];
-
-        NSString *fragment = [NSString stringWithFormat:@"%@=%@", key, [self urlencode:value]];
-
-        keyValueString = [keyValueString stringByAppendingString:fragment];
-        keyValueString = [keyValueString stringByAppendingString:@"&amp;"];
-    }
-
-    NSData *body = [keyValueString dataUsingEncoding:NSUTF8StringEncoding];
-
-    [request setHTTPBody:body];
-
-    if (!error){
-        NSLog(@"%@", error);
-    }
-
-    NSURLSessionConfiguration *config = [NSURLSessionConfiguration defaultSessionConfiguration];
-    NSURLSession *session = [NSURLSession sessionWithConfiguration:config];
-
-    NSURLSessionDataTask *task = [session dataTaskWithRequest:request completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-
-        NSError *jsonParsingError = nil;
-
-        NSDictionary *result = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments  error:&jsonParsingError];
-
-        if (jsonParsingError)
-            error = jsonParsingError;
-
-        block(result, error);
-
-    }];
-
-    [task resume];
-
-}
-
-- (NSString *)urlencode: (NSString*)string
-{
-    NSMutableString *output = [NSMutableString string];
-    const unsigned char *source = (const unsigned char *)[string UTF8String];
-    int sourceLen = strlen((const char *)source);
-    for (int i = 0; i < sourceLen; ++i) {
-        const unsigned char thisChar = source[i];
-        if (thisChar == ' '){
-            [output appendString:@"+"];
-        } else if (thisChar == '.' || thisChar == '-' || thisChar == '_' || thisChar == '~' ||
-                   (thisChar >= 'a' && thisChar <= 'z') ||
-                   (thisChar >= 'A' && thisChar <= 'Z') ||
-                   (thisChar >= '0' && thisChar <= '9')) {
-            [output appendFormat:@"%c", thisChar];
-        } else {
-            [output appendFormat:@"%%%02X", thisChar];
-        }
-    }
-    return output;
-}
-
 
 @end
