@@ -90,9 +90,10 @@
          	</feature>
      	</config-file>
 
+        <source-file src="libs/android/sendgrid-java.jar" target-dir="libs"/>
+
      	<source-file src="src/android/SendGridPlugin.java"  target-dir="src/com/telerik/sendgrid" />
 
 	</platform>
-
 
 </plugin>
