@@ -1,10 +1,5 @@
 package com.telerik.sendgrid;
 
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
 
@@ -13,6 +8,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
+
+import android.net.Uri;
+
 import com.sendgrid.*;
 
 
@@ -23,7 +21,7 @@ public class SendGridPlugin extends CordovaPlugin {
         if (action.equals("sendWithWeb")) {
             try {
 				      this.send(callbackContext, args.getJSONObject(0));
-			      } 
+			      }
             catch (Exception e) {
 				      callbackContext.error(e.getMessage());
 			     }
@@ -55,23 +53,22 @@ public class SendGridPlugin extends CordovaPlugin {
         email.setHtml(jsonObject.getString("html"));
 
       if (jsonObject.has("imagepath")){
-          File file = new File(jsonObject.getString("imagepath"));
+    	  String path = jsonObject.getString("imagepath");
+
+    	  Uri uri = Uri.parse(path);
+    	  File file = new File(uri.getPath());
+        
           if (file != null){
             email.addAttachment(file.getName(), file);
           }
       }
 
-      cordova.getThreadPool().execute(new Runnable() {
-  			@Override
-  			public void run() {
-  			        try {
-  			           SendGrid.Response response = sendgrid.send(email);
-  	               callbackContext.success(new JSONObject(response.getMessage()));
-  			        }
-                catch (Exception e) {
-  			        	callbackContext.error(e.getMessage());
-  			        }
-  			}
-		  });
+      try {
+           SendGrid.Response response = sendgrid.send(email);
+           callbackContext.success(new JSONObject(response.getMessage()));
+      }
+      catch (Exception e) {
+        callbackContext.error(e.getMessage());
+      }
     }
 }

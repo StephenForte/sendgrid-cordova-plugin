@@ -45,6 +45,31 @@ Send it and additionally handle the callbacks for details:
         // TODO: gracefully handle error.
     });
 
+The plugin also supports image attachment. If you have camera plugin installed then you can directly feed the captured uri in the following way:
+
+    navigator.camera.getPicture(function(result){
+        var email = {
+            "to"      : "admin@sengrid-email.com",
+            "from"    : "sendgrid-plugin@telerik.com",
+            "subject" : "Mail from the SendGrid plugin (HTML)",
+            "text"    : "This is the backup text for non-HTML mailclients",
+            "imagepath"   : result,
+            "html"    : "<p>Grabbed this <strong>boldly</strong> from the DOM:</p> " + document.getElementById('emailcontent').innerHTML
+        };
+        window.sendgrid.send(
+            email,
+            function (msg) {
+              alert("SUCCESS: " + JSON.stringify(msg))
+            },
+            function (msg) {
+              alert("ERROR: "   + JSON.stringify(msg))
+            }
+        );
+    }, function(error){
+        // Handle Error
+    },{
+      destinationType: Camera.DestinationType.FILE_URI
+    });
 
 ## Supported Platforms
 
