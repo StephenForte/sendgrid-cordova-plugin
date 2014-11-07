@@ -52,15 +52,19 @@ public class SendGridPlugin extends CordovaPlugin {
       if (jsonObject.has("html"))
         email.setHtml(jsonObject.getString("html"));
 
-      if (jsonObject.has("imagepath")){
-    	  String path = jsonObject.getString("imagepath");
+      if (jsonObject.has("filepaths")){
+    	  JSONArray jsonArray = jsonObject.getJSONArray("filepaths");
 
-    	  Uri uri = Uri.parse(path);
-    	  File file = new File(uri.getPath());
-        
-          if (file != null){
-            email.addAttachment(file.getName(), file);
-          }
+    	  for(int index = 0; index < jsonArray.length(); index++) {
+    		    String path = jsonArray.getString(index);
+    		    Uri uri = Uri.parse(path);
+
+    		    File file = new File(uri.getPath());
+
+    	    	if (file != null){
+    	           email.addAttachment(file.getName(), file);
+    	        }
+    	  }
       }
 
       try {

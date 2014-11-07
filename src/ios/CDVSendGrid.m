@@ -41,13 +41,17 @@
             && [[body objectForKey:@"bcc"] isKindOfClass:[NSArray class]])
             [sendGridEmail setBcc:[body objectForKey:@"bcc"]];
 
-        if ([body objectForKey:@"imagepath"]){
+        if ([body objectForKey:@"filepaths"]){
 
-            // normalize
-            NSString *fullPath = [[body objectForKey:@"imagepath"] stringByReplacingOccurrencesOfString:@"file://" withString:@""];
+            NSArray *paths = [body objectForKey:@"filepaths"];
 
-            UIImage *image = [UIImage imageWithContentsOfFile:fullPath];
-            [sendGridEmail attachImage:image];
+            for (NSString *path in paths){
+                // normalize
+                NSString *relativePath = [path stringByReplacingOccurrencesOfString:@"file://" withString:@""];
+
+                UIImage *image = [UIImage imageWithContentsOfFile:relativePath];
+                [sendGridEmail attachImage:image];
+            }
         }
 
         [sendGrid sendWithWeb:sendGridEmail successBlock:^(id result) {
@@ -55,7 +59,7 @@
                 pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
             else
                 pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:result];
-            
+
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
             });
