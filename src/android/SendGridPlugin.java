@@ -52,8 +52,8 @@ public class SendGridPlugin extends CordovaPlugin {
       if (jsonObject.has("html"))
         email.setHtml(jsonObject.getString("html"));
 
-      if (jsonObject.has("filepaths")){
-    	  JSONArray jsonArray = jsonObject.getJSONArray("filepaths");
+      if (jsonObject.has("files")){
+    	  JSONArray jsonArray = jsonObject.getJSONArray("files");
 
     	  for(int index = 0; index < jsonArray.length(); index++) {
     		    String path = jsonArray.getString(index);

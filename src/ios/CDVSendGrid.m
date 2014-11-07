@@ -41,9 +41,9 @@
             && [[body objectForKey:@"bcc"] isKindOfClass:[NSArray class]])
             [sendGridEmail setBcc:[body objectForKey:@"bcc"]];
 
-        if ([body objectForKey:@"filepaths"]){
+        if ([body objectForKey:@"files"]){
 
-            NSArray *paths = [body objectForKey:@"filepaths"];
+            NSArray *paths = [body objectForKey:@"files"];
 
             for (NSString *path in paths){
                 // normalize
