@@ -53,7 +53,7 @@ The plugin also supports image attachment. If you have camera plugin installed t
             "from"    : "sendgrid-plugin@telerik.com",
             "subject" : "Mail from the SendGrid plugin (HTML)",
             "text"    : "This is the backup text for non-HTML mailclients",
-            "imagepath"   : result,
+            "filepaths"   : [result],
             "html"    : "<p>Grabbed this <strong>boldly</strong> from the DOM:</p> " + document.getElementById('emailcontent').innerHTML
         };
         window.sendgrid.send(
